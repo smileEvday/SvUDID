@@ -9,6 +9,7 @@
 #import "SvUDIDAppDelegate.h"
 
 #import "SvUDIDViewController.h"
+#import "SvUDIDTools.h"
 
 @implementation SvUDIDAppDelegate
 
@@ -53,6 +54,11 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    
+    NSString *udid = [SvUDIDTools UDID];
+    NSLog(@"udid in keychain %@", udid);
+    
+    NSLog(@"current identityForVendor %@", [UIDevice currentDevice].identifierForVendor);
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application

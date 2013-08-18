@@ -7,7 +7,221 @@
 //
 
 #import "SvUDIDTools.h"
+#import <Security/Security.h>
+#include <sys/socket.h>
+#include <sys/sysctl.h>
+#include <net/if.h>
+#include <net/if_dl.h>
+
+// replace the identity with your company's domain
+static const char kKeychainUDIDItemIdentifier[]  = "smileEvdayUDID111.com.111.cnblogs.www\0";
 
 @implementation SvUDIDTools
+
++ (NSString*)UDID
+{
+    NSString *sysVersion = [UIDevice currentDevice].systemVersion;
+    CGFloat version = [sysVersion floatValue];
+    
+    if (version >= 7.0) {
+        return [SvUDIDTools _UDID_iOS7];
+    }
+    else if (version >= 6.0) {
+        return [SvUDIDTools _UDID_iOS6];
+    }
+    else if (version >= 2.0) {
+        return [SvUDIDTools _UDID_iOS5];
+    }
+    
+    return nil;
+}
+
+/* 
+ * iOS Prior to 6.0
+ * use uniqueIdentifier
+ */
++ (NSString*)_UDID_iOS5
+{
+    return [[UIDevice currentDevice] performSelector:@selector(uniqueIdentifier)];
+}
+
+/*
+ * iOS 6.0
+ * use wifi's mac address
+ */
++ (NSString*)_UDID_iOS6
+{
+    return [SvUDIDTools getMacAddress];
+}
+
+/*
+ * iOS 7.0
+ * Starting from iOS 7, the system always returns the value 02:00:00:00:00:00 
+ * when you ask for the MAC address on any device.
+ * use identifierForVendor + keyChain
+ * make sure UDID consistency atfer app delete and reinstall
+ */
++ (NSString*)_UDID_iOS7
+{
+    NSString *udid = [SvUDIDTools getUDIDFromKeyChain];
+    if (!udid) {
+        udid = [[UIDevice currentDevice].identifierForVendor UUIDString];
+        [SvUDIDTools settUDIDToKeyChain:udid];
+    }
+    
+    return udid;
+}
+
+
+#pragma mark -
+#pragma mark Helper Method for Get Mac Address
+
+// from http://stackoverflow.com/questions/677530/how-can-i-programmatically-get-the-mac-address-of-an-iphone
++ (NSString *)getMacAddress
+{
+    int                 mgmtInfoBase[6];
+    char                *msgBuffer = NULL;
+    size_t              length;
+    unsigned char       macAddress[6];
+    struct if_msghdr    *interfaceMsgStruct;
+    struct sockaddr_dl  *socketStruct;
+    NSString            *errorFlag = NULL;
+    
+    // Setup the management Information Base (mib)
+    mgmtInfoBase[0] = CTL_NET;        // Request network subsystem
+    mgmtInfoBase[1] = AF_ROUTE;       // Routing table info
+    mgmtInfoBase[2] = 0;
+    mgmtInfoBase[3] = AF_LINK;        // Request link layer information
+    mgmtInfoBase[4] = NET_RT_IFLIST;  // Request all configured interfaces
+    
+    // With all configured interfaces requested, get handle index
+    if ((mgmtInfoBase[5] = if_nametoindex("en0")) == 0)
+        errorFlag = @"if_nametoindex failure";
+    else
+    {
+        // Get the size of the data available (store in len)
+        if (sysctl(mgmtInfoBase, 6, NULL, &length, NULL, 0) < 0)
+            errorFlag = @"sysctl mgmtInfoBase failure";
+        else
+        {
+            // Alloc memory based on above call
+            if ((msgBuffer = malloc(length)) == NULL)
+                errorFlag = @"buffer allocation failure";
+            else
+            {
+                // Get system information, store in buffer
+                if (sysctl(mgmtInfoBase, 6, msgBuffer, &length, NULL, 0) < 0)
+                    errorFlag = @"sysctl msgBuffer failure";
+            }
+        }
+    }
+    
+    // Befor going any further...
+    if (errorFlag != NULL)
+    {
+        NSLog(@"Error: %@", errorFlag);
+        return errorFlag;
+    }
+    
+    // Map msgbuffer to interface message structure
+    interfaceMsgStruct = (struct if_msghdr *) msgBuffer;
+    
+    // Map to link-level socket structure
+    socketStruct = (struct sockaddr_dl *) (interfaceMsgStruct + 1);
+    
+    // Copy link layer address data in socket structure to an array
+    memcpy(&macAddress, socketStruct->sdl_data + socketStruct->sdl_nlen, 6);
+    
+    // Read from char array into a string object, into traditional Mac address format
+    NSString *macAddressString = [NSString stringWithFormat:@"%02X:%02X:%02X:%02X:%02X:%02X",
+                                  macAddress[0], macAddress[1], macAddress[2],
+                                  macAddress[3], macAddress[4], macAddress[5]];
+    NSLog(@"Mac Address: %@", macAddressString);
+    
+    // Release the buffer memory
+    free(msgBuffer);
+    
+    return macAddressString;
+}
+
+#pragma mark -
+#pragma mark Helper Method for make identityForVendor consistency
+
++ (NSString*)getUDIDFromKeyChain
+{
+    NSMutableDictionary *dictForQuery = [[NSMutableDictionary alloc] init];
+    [dictForQuery setValue:(id)kSecClassGenericPassword forKey:(id)kSecClass];
+    
+    // set Attr Description for query
+    [dictForQuery setValue:[NSString stringWithUTF8String:kKeychainUDIDItemIdentifier]
+                    forKey:kSecAttrDescription];
+    
+    // set Attr Identity for query
+    NSData *keychainItemID = [NSData dataWithBytes:kKeychainUDIDItemIdentifier
+                                            length:strlen(kKeychainUDIDItemIdentifier)];
+    [dictForQuery setObject:keychainItemID forKey:(id)kSecAttrGeneric];
+    
+    [dictForQuery setValue:(id)kCFBooleanTrue forKey:(id)kSecMatchCaseInsensitive];
+    [dictForQuery setValue:(id)kSecMatchLimitOne forKey:(id)kSecMatchLimit];
+    [dictForQuery setValue:(id)kCFBooleanTrue forKey:(id)kSecReturnData];
+    
+    OSStatus queryErr   = noErr;
+    NSData   *udidValue = nil;
+    NSString *udid      = nil;
+    queryErr = SecItemCopyMatching((CFDictionaryRef)dictForQuery, (CFTypeRef*)&udidValue);
+    
+    if (queryErr == errSecItemNotFound) {
+        NSLog(@"KeyChain Item: %@ not found!!!", [NSString stringWithUTF8String:kKeychainUDIDItemIdentifier]);
+    }
+    else if (queryErr != errSecSuccess) {
+        NSLog(@"KeyChain Item query Error!!! Error code:%ld", queryErr);
+    }
+    if (queryErr == errSecSuccess) {
+        NSLog(@"KeyChain Item: %@", udidValue);
+        
+        if (udidValue) {
+            udid = [NSString stringWithUTF8String:udidValue.bytes];
+        }
+    }
+    
+    [dictForQuery release];
+    return udid;
+}
+
++ (BOOL)settUDIDToKeyChain:(NSString*)udid
+{
+    NSMutableDictionary *dictForAdd = [[NSMutableDictionary alloc] init];
+    
+    [dictForAdd setValue:(id)kSecClassGenericPassword forKey:(id)kSecClass];
+    
+    [dictForAdd setValue:[NSString stringWithUTF8String:kKeychainUDIDItemIdentifier] forKey:kSecAttrDescription];
+    
+    NSData *keyChainItemID = [NSData dataWithBytes:kKeychainUDIDItemIdentifier length:strlen(kKeychainUDIDItemIdentifier)];
+    [dictForAdd setValue:keyChainItemID forKey:(id)kSecAttrGeneric];
+   
+    const char *udidStr = [udid UTF8String];
+    NSData *keyChainItemValue = [NSData dataWithBytes:udidStr length:strlen(udidStr)];
+    [dictForAdd setValue:keyChainItemValue forKey:(id)kSecValueData];
+    [dictForAdd setValue:(id)kCFBooleanTrue forKey:(id)kSecReturnData];
+    
+    OSStatus writeErr = noErr;
+    if ([SvUDIDTools getUDIDFromKeyChain]) {        // there is item in keychain
+        
+        return YES;
+    }
+    else {          // add item to keychain
+        writeErr = SecItemAdd((CFDictionaryRef)dictForAdd, NULL);
+        if (writeErr != errSecSuccess) {
+            NSLog(@"Add KeyChain Item Error!!! Error Code:%ld", writeErr);
+            return YES;
+        }
+        else {
+            NSLog(@"Add KeyChain Item Success!!!");
+            return YES;
+        }
+    }
+    
+    return NO;
+}
 
 @end

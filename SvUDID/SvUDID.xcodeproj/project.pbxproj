@@ -19,6 +19,8 @@
 		F507415117C0FD0C00B2AA82 /* SvUDIDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F507415017C0FD0C00B2AA82 /* SvUDIDViewController.m */; };
 		F507415417C0FD0C00B2AA82 /* SvUDIDViewController_iPhone.xib in Resources */ = {isa = PBXBuildFile; fileRef = F507415217C0FD0C00B2AA82 /* SvUDIDViewController_iPhone.xib */; };
 		F507415717C0FD0C00B2AA82 /* SvUDIDViewController_iPad.xib in Resources */ = {isa = PBXBuildFile; fileRef = F507415517C0FD0C00B2AA82 /* SvUDIDViewController_iPad.xib */; };
+		F507415E17C0FD2E00B2AA82 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F507415D17C0FD2E00B2AA82 /* Security.framework */; };
+		F507416617C0FDF600B2AA82 /* SvUDIDTools.m in Sources */ = {isa = PBXBuildFile; fileRef = F507416517C0FDF600B2AA82 /* SvUDIDTools.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +41,9 @@
 		F507415017C0FD0C00B2AA82 /* SvUDIDViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SvUDIDViewController.m; sourceTree = "<group>"; };
 		F507415317C0FD0C00B2AA82 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SvUDIDViewController_iPhone.xib; sourceTree = "<group>"; };
 		F507415617C0FD0C00B2AA82 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SvUDIDViewController_iPad.xib; sourceTree = "<group>"; };
+		F507415D17C0FD2E00B2AA82 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		F507416417C0FDF600B2AA82 /* SvUDIDTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SvUDIDTools.h; sourceTree = "<group>"; };
+		F507416517C0FDF600B2AA82 /* SvUDIDTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SvUDIDTools.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +51,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F507415E17C0FD2E00B2AA82 /* Security.framework in Frameworks */,
 				F507413817C0FD0C00B2AA82 /* UIKit.framework in Frameworks */,
 				F507413A17C0FD0C00B2AA82 /* Foundation.framework in Frameworks */,
 				F507413C17C0FD0C00B2AA82 /* CoreGraphics.framework in Frameworks */,
@@ -75,6 +81,7 @@
 		F507413617C0FD0C00B2AA82 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F507415D17C0FD2E00B2AA82 /* Security.framework */,
 				F507413717C0FD0C00B2AA82 /* UIKit.framework */,
 				F507413917C0FD0C00B2AA82 /* Foundation.framework */,
 				F507413B17C0FD0C00B2AA82 /* CoreGraphics.framework */,
@@ -91,6 +98,7 @@
 				F507415017C0FD0C00B2AA82 /* SvUDIDViewController.m */,
 				F507415217C0FD0C00B2AA82 /* SvUDIDViewController_iPhone.xib */,
 				F507415517C0FD0C00B2AA82 /* SvUDIDViewController_iPad.xib */,
+				F507416317C0FDE800B2AA82 /* UDID_Tools */,
 				F507413E17C0FD0C00B2AA82 /* Supporting Files */,
 			);
 			path = SvUDID;
@@ -108,6 +116,15 @@
 				F507414D17C0FD0C00B2AA82 /* Default-568h@2x.png */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		F507416317C0FDE800B2AA82 /* UDID_Tools */ = {
+			isa = PBXGroup;
+			children = (
+				F507416417C0FDF600B2AA82 /* SvUDIDTools.h */,
+				F507416517C0FDF600B2AA82 /* SvUDIDTools.m */,
+			);
+			path = UDID_Tools;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -181,6 +198,7 @@
 				F507414417C0FD0C00B2AA82 /* main.m in Sources */,
 				F507414817C0FD0C00B2AA82 /* SvUDIDAppDelegate.m in Sources */,
 				F507415117C0FD0C00B2AA82 /* SvUDIDViewController.m in Sources */,
+				F507416617C0FDF600B2AA82 /* SvUDIDTools.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
