@@ -64,11 +64,11 @@ static const char kKeychainUDIDItemIdentifier[]  = "smileEvdayUDID111.com.111.cn
 + (NSString*)_UDID_iOS7
 {
     NSString *udid = [SvUDIDTools getUDIDFromKeyChain];
-    if (!udid) {
+//    if (!udid) {
         udid = [[UIDevice currentDevice].identifierForVendor UUIDString];
         [SvUDIDTools settUDIDToKeyChain:udid];
-    }
-    
+//    }
+
     return udid;
 }
 
@@ -193,7 +193,6 @@ static const char kKeychainUDIDItemIdentifier[]  = "smileEvdayUDID111.com.111.cn
     NSMutableDictionary *dictForAdd = [[NSMutableDictionary alloc] init];
     
     [dictForAdd setValue:(id)kSecClassGenericPassword forKey:(id)kSecClass];
-    
     [dictForAdd setValue:[NSString stringWithUTF8String:kKeychainUDIDItemIdentifier] forKey:kSecAttrDescription];
     
     NSData *keyChainItemID = [NSData dataWithBytes:kKeychainUDIDItemIdentifier length:strlen(kKeychainUDIDItemIdentifier)];
@@ -202,25 +201,107 @@ static const char kKeychainUDIDItemIdentifier[]  = "smileEvdayUDID111.com.111.cn
     const char *udidStr = [udid UTF8String];
     NSData *keyChainItemValue = [NSData dataWithBytes:udidStr length:strlen(udidStr)];
     [dictForAdd setValue:keyChainItemValue forKey:(id)kSecValueData];
-    [dictForAdd setValue:(id)kCFBooleanTrue forKey:(id)kSecReturnData];
     
     OSStatus writeErr = noErr;
     if ([SvUDIDTools getUDIDFromKeyChain]) {        // there is item in keychain
-        
+        [SvUDIDTools updateUDIDInKeyChain:udid];
+        [dictForAdd release];
         return YES;
     }
     else {          // add item to keychain
         writeErr = SecItemAdd((CFDictionaryRef)dictForAdd, NULL);
         if (writeErr != errSecSuccess) {
             NSLog(@"Add KeyChain Item Error!!! Error Code:%ld", writeErr);
-            return YES;
+            
+            [dictForAdd release];
+            return NO;
         }
         else {
             NSLog(@"Add KeyChain Item Success!!!");
+            [dictForAdd release];
             return YES;
         }
     }
     
+    [dictForAdd release];
+    return NO;
+}
+
++ (BOOL)removeUDIDFromKeyChain
+{
+    NSMutableDictionary *dictToDelete = [[NSMutableDictionary alloc] init];
+    
+    [dictToDelete setValue:(id)kSecClassGenericPassword forKey:(id)kSecClass];
+    
+    NSData *keyChainItemID = [NSData dataWithBytes:kKeychainUDIDItemIdentifier length:strlen(kKeychainUDIDItemIdentifier)];
+    [dictToDelete setValue:keyChainItemID forKey:(id)kSecAttrGeneric];
+    
+    OSStatus deleteErr = noErr;
+    deleteErr = SecItemDelete((CFDictionaryRef)dictToDelete);
+    if (deleteErr != errSecSuccess) {
+        NSLog(@"delete UUID from KeyChain Error!!! Error code:%ld", deleteErr);
+        [dictToDelete release];
+        return NO;
+    }
+    else {
+        NSLog(@"delete success!!!");
+    }
+    
+    [dictToDelete release];
+    return YES;
+}
+
++ (BOOL)updateUDIDInKeyChain:(NSString*)newUDID
+{
+    
+    NSMutableDictionary *dictForQuery = [[NSMutableDictionary alloc] init];
+    
+    [dictForQuery setValue:(id)kSecClassGenericPassword forKey:(id)kSecClass];
+   
+    NSData *keychainItemID = [NSData dataWithBytes:kKeychainUDIDItemIdentifier
+                                            length:strlen(kKeychainUDIDItemIdentifier)];
+    [dictForQuery setValue:keychainItemID forKey:(id)kSecAttrGeneric];
+    [dictForQuery setValue:(id)kCFBooleanTrue forKey:(id)kSecMatchCaseInsensitive];
+    [dictForQuery setValue:(id)kSecMatchLimitOne forKey:(id)kSecMatchLimit];
+    [dictForQuery setValue:(id)kCFBooleanTrue forKey:(id)kSecReturnAttributes];
+    
+    NSDictionary *queryResult = nil;
+    SecItemCopyMatching((CFDictionaryRef)dictForQuery, (CFTypeRef*)&queryResult);
+    if (queryResult) {
+        NSMutableDictionary *dictForUpdate = [[NSMutableDictionary alloc] init];
+        [dictForUpdate setValue:[NSString stringWithUTF8String:kKeychainUDIDItemIdentifier] forKey:kSecAttrDescription];
+        [dictForUpdate setValue:keychainItemID forKey:(id)kSecAttrGeneric];
+        
+        const char *udidStr = [newUDID UTF8String];
+        NSData *keyChainItemValue = [NSData dataWithBytes:udidStr length:strlen(udidStr)];
+        [dictForUpdate setValue:keyChainItemValue forKey:(id)kSecValueData];
+        
+        OSStatus updateErr = noErr;
+        
+        // First we need the attributes from the Keychain.
+        NSMutableDictionary *updateItem = [NSMutableDictionary dictionaryWithDictionary:queryResult];
+        
+        // Second we need to add the appropriate search key/values.
+        // set kSecClass is Very important
+        [updateItem setObject:(id)kSecClassGenericPassword forKey:(id)kSecClass];
+        
+        updateErr = SecItemUpdate((CFDictionaryRef)updateItem, (CFDictionaryRef)dictForUpdate);
+        if (updateErr != errSecSuccess) {
+            NSLog(@"Update KeyChain Item Error!!! Error Code:%ld", updateErr);
+            
+            [dictForQuery release];
+            [dictForUpdate release];
+            return NO;
+        }
+        else {
+            NSLog(@"Update KeyChain Item Success!!!");
+            [dictForQuery release];
+            [dictForUpdate release];
+            return YES;
+        }
+    }
+    
+    [dictForQuery release];
     return NO;
 }
 
