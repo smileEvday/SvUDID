@@ -15,7 +15,7 @@
 
 // replace the identity with your company's domain
 static const char kKeychainUDIDItemIdentifier[]  = "UUID";
-static const char kKeyChainUDIDAccessGroup[] = "FW42Y6F2WC.com.cnblogs.smileEvday";
+static const char kKeyChainUDIDAccessGroup[] = "YOURAPPID.com.cnblogs.smileEvday";
 
 @implementation SvUDIDTools
 
