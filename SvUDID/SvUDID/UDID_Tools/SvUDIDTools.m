@@ -64,7 +64,6 @@ static const char kKeyChainUDIDAccessGroup[] = "YOURAPPID.com.cnblogs.smileEvday
  */
 + (NSString*)_UDID_iOS7
 {
-    [SvUDIDTools removeUDIDFromKeyChain];
     NSString *udid = [SvUDIDTools getUDIDFromKeyChain];
     if (!udid) {
         udid = [[UIDevice currentDevice].identifierForVendor UUIDString];
