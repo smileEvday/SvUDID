@@ -27,11 +27,8 @@ static const char kKeyChainUDIDAccessGroup[] = "YOURAPPID.com.cnblogs.smileEvday
     if (version >= 7.0) {
         return [SvUDIDTools _UDID_iOS7];
     }
-    else if (version >= 6.0) {
-        return [SvUDIDTools _UDID_iOS6];
-    }
     else if (version >= 2.0) {
-        return [SvUDIDTools _UDID_iOS5];
+        return [SvUDIDTools _UDID_iOS6];
     }
     
     return nil;
@@ -43,7 +40,10 @@ static const char kKeyChainUDIDAccessGroup[] = "YOURAPPID.com.cnblogs.smileEvday
  */
 + (NSString*)_UDID_iOS5
 {
-    return [[UIDevice currentDevice] performSelector:@selector(uniqueIdentifier)];
+#warning this line may lead your app failed to submit to appstore
+    // return [[UIDevice currentDevice] performSelector:@selector(uniqueIdentifier)];
+    
+    return nil;
 }
 
 /*
