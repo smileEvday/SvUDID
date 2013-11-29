@@ -21,29 +21,23 @@ static const char kKeyChainUDIDAccessGroup[] = "YOURAPPID.com.cnblogs.smileEvday
 
 + (NSString*)UDID
 {
-    NSString *sysVersion = [UIDevice currentDevice].systemVersion;
-    CGFloat version = [sysVersion floatValue];
+    NSString *udid = [SvUDIDTools getUDIDFromKeyChain];
+    if (!udid) {
+        
+        NSString *sysVersion = [UIDevice currentDevice].systemVersion;
+        CGFloat version = [sysVersion floatValue];
     
-    if (version >= 7.0) {
-        return [SvUDIDTools _UDID_iOS7];
+        if (version >= 7.0) {
+            udid = [SvUDIDTools _UDID_iOS7];
+        }
+        else if (version >= 2.0) {
+            udid = [SvUDIDTools _UDID_iOS6];
+        }
+    
+        [SvUDIDTools settUDIDToKeyChain:udid];
     }
-    else if (version >= 2.0) {
-        return [SvUDIDTools _UDID_iOS6];
-    }
     
-    return nil;
-}
-
-/* 
- * iOS Prior to 6.0
- * use uniqueIdentifier
- */
-+ (NSString*)_UDID_iOS5
-{
-#warning this line may lead your app failed to submit to appstore
-    // return [[UIDevice currentDevice] performSelector:@selector(uniqueIdentifier)];
-    
-    return nil;
+    return udid;
 }
 
 /*
@@ -64,13 +58,7 @@ static const char kKeyChainUDIDAccessGroup[] = "YOURAPPID.com.cnblogs.smileEvday
  */
 + (NSString*)_UDID_iOS7
 {
-    NSString *udid = [SvUDIDTools getUDIDFromKeyChain];
-    if (!udid) {
-        udid = [[UIDevice currentDevice].identifierForVendor UUIDString];
-        [SvUDIDTools settUDIDToKeyChain:udid];
-    }
-
-    return udid;
+    return [[UIDevice currentDevice].identifierForVendor UUIDString];
 }
 
 
