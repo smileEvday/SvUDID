@@ -322,6 +322,7 @@ static const char kKeyChainUDIDAccessGroup[] = "YOURAPPID.com.cnblogs.smileEvday
         
         // First we need the attributes from the Keychain.
         NSMutableDictionary *updateItem = [NSMutableDictionary dictionaryWithDictionary:queryResult];
+        [queryResult release];
         
         // Second we need to add the appropriate search key/values.
         // set kSecClass is Very important
