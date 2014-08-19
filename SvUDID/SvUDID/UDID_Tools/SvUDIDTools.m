@@ -197,7 +197,9 @@ static const char kKeyChainUDIDAccessGroup[] = "YOURAPPID.com.cnblogs.smileEvday
         
         if (udidValue) {
             udid = [NSString stringWithUTF8String:udidValue.bytes];
+            [udidValue release];
         }
+        [dict release];
     }
     
     [dictForQuery release];
